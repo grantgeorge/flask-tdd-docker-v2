@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "flask-tdd-docker"
+version = "0.1.0"
+description = ""
+authors = ["Grant George <grant.george@unitedmasters.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+flask = "2.3.3"
+flask-restx = "1.2.0"
+werkzeug = "2.3.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
