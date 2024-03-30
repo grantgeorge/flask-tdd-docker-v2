@@ -1,85 +1,75 @@
-name: Continuous Integration and Delivery
-
+name: Deploy to heroku.
 on:
   push:
     branches:
-      - main
-
-env:
-  WEB_IMAGE: ghcr.io/$(echo $GITHUB_REPOSITORY | tr '[A-Z]' '[a-z]')/web
-
+      - '*'
 jobs:
-  build:
-    name: Build Docker Image
+  tests:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.12'
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.2
+          virtualenvs-create: true
+          virtualenvs-in-project: false
+          installer-parallel: true
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: |
+          poetry install --no-interaction --no-root
+      - name: Run tests
+        run: pytest
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.12'
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.2
+          virtualenvs-create: true
+          virtualenvs-in-project: false
+          installer-parallel: true
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: |
+          poetry install --no-interaction --no-root
+      - name: Run black
+        run: black src --check
+      - name: Run isort
+        run: isort src --check-only --profile black
+      - name: Run flake8
+        run: flake8 src
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [tests, code-quality]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Build, Push, and Release a Docker container to Heroku.
+        uses: gonuit/heroku-docker-deploy@v1.3.3
         with:
-          ref: main
-      - name: Log in to GitHub Packages
-        run: echo ${GITHUB_TOKEN} | docker login -u ${GITHUB_ACTOR} --password-stdin ghcr.io
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Pull image
-        run: |
-          docker pull ${{ env.WEB_IMAGE }}:latest || true
-      - name: Build image
-        run: |
-          docker build \
-            --cache-from ${{ env.WEB_IMAGE }}:latest \
-            --tag ${{ env.WEB_IMAGE }}:latest \
-            --file ./Dockerfile.prod \
-            "./"
-      - name: Push image
-        run: |
-          docker push ${{ env.WEB_IMAGE }}:latest
-
-  test:
-    name: Test Docker Image
-    runs-on: ubuntu-latest
-    needs: build
-    env:
-      POSTGRES_DB: users
-      POSTGRES_USER: runner
-      POSTGRES_PASSWORD: runner
-      DATABASE_URL: postgresql://runner:runner@postgres:5432/users
-      DATABASE_TEST_URL: postgresql://runner:runner@postgres:5432/users
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          ref: main
-      - name: Log in to GitHub Packages
-        run: echo ${GITHUB_TOKEN} | docker login -u ${GITHUB_ACTOR} --password-stdin ghcr.io
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Pull image
-        run: |
-          docker pull ${{ env.WEB_IMAGE }}:latest || true
-      - name: Build image
-        run: |
-          docker build \
-            --cache-from ${{ env.WEB_IMAGE }}:latest \
-            --tag ${{ env.WEB_IMAGE }}:latest \
-            --file ./Dockerfile.prod \
-            "./"
-      - name: Run container
-        run: |
-          docker run \
-            -d \
-            --name flask-tdd \
-            -e PORT=8765 \
-            -e ENVIRONMENT=testing \
-            -e DATABASE_URL=postgresql://runner:runner@postgres:5432/users \
-            -e DATABASE_TEST_URL=postgresql://runner:runner@postgres:5432/users \
-            -p 5005:8765 \
-            ${{ env.WEB_IMAGE }}:latest
-      - name: Pytest
-        run: docker exec flask-tdd python -m pytest "src/tests" -p no:warnings
-      - name: Flake8
-        run: docker exec flask-tdd python -m flake8 src
-      - name: Black
-        run: docker exec flask-tdd python -m black src --check
-      - name: isort
-        run: docker exec flask-tdd python -m isort src --check-only
+          email: ${{ secrets.HEROKU_EMAIL }}
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
+          dockerfile_name: Dockerfile.prod
