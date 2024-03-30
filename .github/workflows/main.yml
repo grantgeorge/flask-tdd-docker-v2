@@ -1,4 +1,12 @@
-name: Deploy to heroku.
+name: CI/CD
+
+env:
+  # Enable Buildkit and let compose use it to speed up image building
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+  DATABASE_URL: psql://postgres:postgres@localhost:5432/flask-tdd
+  DATABASE_TEST_URL: psql://postgres:postgres@localhost:5432/flask-tdd-test
+
 on:
   push:
     branches:
@@ -7,8 +15,8 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/  @v5
         with:
           python-version: '3.12'
       - name: Install and configure Poetry
@@ -23,7 +31,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          key: venv-${{ runner.os }}-${{ steps. .outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: |
@@ -35,8 +43,8 @@ jobs:
   code-quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/  @v5
         with:
           python-version: '3.12'
       - name: Install and configure Poetry
@@ -51,7 +59,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          key: venv-${{ runner.os }}-${{ steps. .outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: |
@@ -73,7 +81,7 @@ jobs:
     needs: [tests, code-quality]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build, Push, and Release a Docker container to Heroku.
         uses: gonuit/heroku-docker-deploy@v1.3.3
         with:
