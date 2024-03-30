@@ -29,8 +29,8 @@ jobs:
           docker build \
             --cache-from ${{ env.WEB_IMAGE }}:latest \
             --tag ${{ env.WEB_IMAGE }}:latest \
-            --file ./project/Dockerfile.web \
-            "./project"
+            --file ./Dockerfile.prod \
+            "./"
       - name: Push image
         run: |
           docker push ${{ env.WEB_IMAGE }}:latest
