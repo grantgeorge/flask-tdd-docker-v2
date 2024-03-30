@@ -1,0 +1,36 @@
+name: Continuous Integration and Delivery
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  WEB_IMAGE: ghcr.io/$(echo $GITHUB_REPOSITORY | tr '[A-Z]' '[a-z]')/web
+
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: main
+      - name: Log in to GitHub Packages
+        run: echo ${GITHUB_TOKEN} | docker login -u ${GITHUB_ACTOR} --password-stdin ghcr.io
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull image
+        run: |
+          docker pull ${{ env.WEB_IMAGE }}:latest || true
+      - name: Build image
+        run: |
+          docker build \
+            --cache-from ${{ env.WEB_IMAGE }}:latest \
+            --tag ${{ env.WEB_IMAGE }}:latest \
+            --file ./project/Dockerfile.web \
+            "./project"
+      - name: Push image
+        run: |
+          docker push ${{ env.WEB_IMAGE }}:latest
