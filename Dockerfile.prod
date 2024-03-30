@@ -1,0 +1,43 @@
+# pull official base image
+FROM python:3.12.0
+
+# set working directory
+WORKDIR /usr/src/app
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV FLASK_DEBUG 0
+ENV FLASK_ENV production
+ENV APP_SETTINGS src.config.ProductionConfig
+
+# Base apt dependencies
+RUN <<EOF
+set -e
+apt-get update
+apt-get install -y netcat-traditional gcc
+
+# Install postgresql-client-16
+apt-get install -y lsb-release wget
+sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+apt update
+apt-get install -y postgresql-client-16
+rm -rf /var/lib/apt/lists/*
+
+EOF
+
+# install poetry and dependencies
+RUN pip install --upgrade pip poetry
+COPY ./pyproject.toml ./poetry.lock* /usr/src/app/
+RUN poetry config virtualenvs.create false && poetry install --no-interaction
+
+# add app
+COPY . .
+
+# add and run as non-root user
+RUN adduser --disabled-password myuser
+USER myuser
+
+# run gunicorn
+CMD gunicorn --bind 0.0.0.0:$PORT manage:app
