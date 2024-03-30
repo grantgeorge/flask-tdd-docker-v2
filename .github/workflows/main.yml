@@ -62,7 +62,7 @@ jobs:
           docker build \
             --cache-from ${{ env.WEB_IMAGE }}:latest \
             --tag ${{ env.WEB_IMAGE }}:latest \
-            --file ./Dockerfile.web \
+            --file ./Dockerfile.prod \
             "./"
       - name: Run container
         run: |
