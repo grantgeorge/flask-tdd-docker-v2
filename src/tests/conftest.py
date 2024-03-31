@@ -1,12 +1,12 @@
 import pytest
 
-from src import create_app, db  # updated
-from src.api.models import User
+from src import create_app, db
+from src.api.users.models import User
 
 
 @pytest.fixture(scope="module")
 def test_app():
-    app = create_app()  # new
+    app = create_app()
     app.config.from_object("src.config.TestingConfig")
     with app.app_context():
         yield app  # testing happens here
