@@ -2,3 +2,12 @@ __pycache__
 env
 .coverage
 htmlcov
+.pytest_cache/
+.ipython/
+.env
+.envs/*
+.envrc
+!.envs/.local/
+
+.vscode/
+.venv/

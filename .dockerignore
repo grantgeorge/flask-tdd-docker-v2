@@ -3,3 +3,14 @@ Dockerfile
 Dockerfile.prod
 .coverage
 htmlcov
+
+.git
+.editorconfig
+.gitattributes
+.github
+.gitignore
+.idea
+.pre-commit-config.yaml
+venv
+.venv
+docs

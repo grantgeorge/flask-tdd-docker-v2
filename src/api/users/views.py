@@ -1,5 +1,5 @@
 from flask import request
-from flask_restx import Resource, fields, Namespace
+from flask_restx import Namespace, Resource, fields
 
 from src.api.users.crud import (  # isort:skip
     get_all_users,
@@ -89,7 +89,7 @@ class Users(Resource):
     @users_namespace.response(200, "<user_id> was removed!")
     @users_namespace.response(404, "User <user_id> does not exist")
     def delete(self, user_id):
-        """"Deletes a user."""
+        """Deletes a user."""
         response_object = {}
         user = get_user_by_id(user_id)
 
