@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
     entrypoint: ['/usr/src/app/entrypoint.sh']
     volumes:
-      - '.:/usr/src/app'
+      - 'flasktddpg:/usr/src/app'
     ports:
       - 5004:5000
     environment:
@@ -29,3 +29,6 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+
+volumes:
+  flasktddpg:
