@@ -4,13 +4,18 @@ env:
   # Enable Buildkit and let compose use it to speed up image building
   DOCKER_BUILDKIT: 1
   COMPOSE_DOCKER_CLI_BUILD: 1
-  DATABASE_URL: psql://postgres:postgres@localhost:5432/flask-tdd
-  DATABASE_TEST_URL: psql://postgres:postgres@localhost:5432/flask-tdd-test
+  FLASK_APP: src/__init__.py
+  FLASK_DEBUG: 0
+  FLASK_ENV: production
+  APP_SETTINGS: src.config.DevelopmentConfig
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/flask-tdd
+  DATABASE_TEST_URL: postgresql://postgres:postgres@localhost:5432/flask-tdd-test
 
 on:
   push:
     branches:
       - '*'
+
 jobs:
   tests:
     runs-on: ubuntu-latest
